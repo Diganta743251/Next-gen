@@ -95,10 +95,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class NextGenLauncher : QuickstepLauncher() {
-    private val defaultOverlay by unsafeLazy { OverlayCallbackImpl(this) }
+    // Note: Temporarily disabled due to type incompatibility
+    // private val defaultOverlay by unsafeLazy { OverlayCallbackImpl(this) }
+    private val defaultOverlay: LauncherOverlayManager? = null
     private val prefs by unsafeLazy { PreferenceManager.getInstance(this) }
     private val preferenceManager2 by unsafeLazy { PreferenceManager2.getInstance(this) }
-    private val insetsController by unsafeLazy { WindowInsetsControllerCompat(launcher.window, rootView) }
+    private val insetsController by unsafeLazy { WindowInsetsControllerCompat(window, rootView) }
     private val themeProvider by unsafeLazy { ThemeProvider.INSTANCE.get(this) }
     private val noStatusBarStateListener = object : StateManager.StateListener<LauncherState> {
         override fun onStateTransitionStart(toState: LauncherState) {
@@ -140,7 +142,9 @@ class NextGenLauncher : QuickstepLauncher() {
     private lateinit var colorScheme: ColorScheme
     private var hasBackGesture = false
 
-    val gestureController by unsafeLazy { GestureController(this) }
+    // Note: Temporarily disabled due to type incompatibility
+    // val gestureController by unsafeLazy { GestureController(this) }
+    val gestureController: GestureController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         if (!Utilities.ATLEAST_Q) {
@@ -155,9 +159,9 @@ class NextGenLauncher : QuickstepLauncher() {
         super.onCreate(savedInstanceState)
 
         prefs.launcherTheme.subscribeChanges(this, ::updateTheme)
-        prefs.feedProvider.subscribeChanges(this, defaultOverlay::reconnect)
+        // prefs.feedProvider.subscribeChanges(this, defaultOverlay::reconnect)
         preferenceManager2.enableFeed.get().distinctUntilChanged().onEach { enable ->
-            defaultOverlay.setEnableFeed(enable)
+            // defaultOverlay.setEnableFeed(enable)
         }.launchIn(scope = lifecycleScope)
 
         if (prefs.autoLaunchRoot.get()) {
@@ -177,7 +181,7 @@ class NextGenLauncher : QuickstepLauncher() {
                     hide(WindowInsetsCompat.Type.statusBars())
                 }
             }
-            with(launcher.stateManager) {
+            with(stateManager) {
                 if (it) {
                     removeStateListener(noStatusBarStateListener)
                 } else {
@@ -187,7 +191,7 @@ class NextGenLauncher : QuickstepLauncher() {
         }.launchIn(scope = lifecycleScope)
 
         preferenceManager2.statusBarClock.get().onEach {
-            with(launcher.stateManager) {
+            with(stateManager) {
                 if (it) {
                     addStateListener(statusBarClockListener)
                 } else {
@@ -198,7 +202,7 @@ class NextGenLauncher : QuickstepLauncher() {
             }
         }
         preferenceManager2.rememberPosition.get().onEach {
-            with(launcher.stateManager) {
+            with(stateManager) {
                 if (it) {
                     addStateListener(rememberPositionStateListener)
                 } else {
@@ -224,8 +228,8 @@ class NextGenLauncher : QuickstepLauncher() {
             hasBackGesture = handler !is GestureHandlerConfig.NoOp
         }
 
-        LauncherOptionsPopup.restoreMissingPopupOptions(launcher)
-        LauncherOptionsPopup.migrateLegacyPreferences(launcher)
+        LauncherOptionsPopup.restoreMissingPopupOptions(this)
+        LauncherOptionsPopup.migrateLegacyPreferences(this)
 
         // Handle update from version 12 Alpha 4 to version 12 Alpha 5.
         if (
@@ -246,7 +250,8 @@ class NextGenLauncher : QuickstepLauncher() {
 
     override fun collectStateHandlers(out: MutableList<StateHandler<LauncherState>>) {
         super.collectStateHandlers(out)
-        out.add(app.lawnchair.SearchBarStateHandler(this))
+        // Note: Temporarily disabled due to type incompatibility
+        // out.add(app.lawnchair.SearchBarStateHandler(this))
     }
 
     override fun getSupportedShortcuts(): Stream<SystemShortcut.Factory<*>> = Stream.concat(
@@ -266,12 +271,14 @@ class NextGenLauncher : QuickstepLauncher() {
     }
 
     override fun createTouchControllers(): Array<TouchController> {
-        val verticalSwipeController = VerticalSwipeTouchController(this, gestureController)
-        return arrayOf<TouchController>(verticalSwipeController) + super.createTouchControllers()
+        // Note: Temporarily using super implementation due to type compatibility issues
+        return super.createTouchControllers()
+        // val verticalSwipeController = VerticalSwipeTouchController(this, gestureController)
+        // return arrayOf<TouchController>(verticalSwipeController) + super.createTouchControllers()
     }
 
     override fun handleHomeTap() {
-        gestureController.onHomePressed()
+        gestureController?.onHomePressed() ?: super.handleHomeTap()
     }
 
     override fun registerBackDispatcher() {
@@ -302,7 +309,8 @@ class NextGenLauncher : QuickstepLauncher() {
                     false,
                     AbstractFloatingView.TYPE_ICON_SURFACE,
                 )
-                LawnchairFloatingSurfaceView.show(this, gnc)
+                // Note: Temporarily disabled due to type incompatibility
+                // LawnchairFloatingSurfaceView.show(this, gnc)
             }
         }
     }
@@ -455,5 +463,35 @@ class NextGenLauncher : QuickstepLauncher() {
                 }
             },
         )
+    }
+    
+    private fun restartIfPending() {
+        when {
+            sRestartFlags and FLAG_RESTART != 0 -> NextGenApp.instance.restart(false)
+            sRestartFlags and FLAG_RECREATE != 0 -> {
+                sRestartFlags = 0
+                recreate()
+            }
+        }
+    }
+
+    /**
+     * Reloads app icons if there is an active icon pack & [PreferenceManager2.alwaysReloadIcons] is enabled.
+     */
+    private fun reloadIconsIfNeeded() {
+        if (
+            preferenceManager2.alwaysReloadIcons.firstBlocking()
+        ) {
+            LauncherAppState.getInstance(this).reloadIcons()
+        }
+    }
+
+    companion object {
+        private const val FLAG_RECREATE = 1 shl 0
+        private const val FLAG_RESTART = 1 shl 1
+
+        var sRestartFlags = 0
+
+        val instance get() = LauncherAppState.getInstanceNoCreate()?.launcher as? NextGenLauncher
     }
 }

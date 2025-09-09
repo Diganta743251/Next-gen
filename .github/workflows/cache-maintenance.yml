@@ -1,0 +1,75 @@
+name: Cache Maintenance
+
+on:
+  schedule:
+    # Run every day at 2 AM UTC to clean up old cache entries
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      force_cache_clear:
+        description: 'Force clear all Gradle caches'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  cache-maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+      
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+      
+      - name: Clear Gradle cache (force)
+        if: ${{ github.event.inputs.force_cache_clear == 'true' }}
+        run: |
+          echo "Force clearing all Gradle caches..."
+          rm -rf ~/.gradle/caches
+          rm -rf ~/.gradle/wrapper
+          ./gradlew --stop
+      
+      - name: Setup Gradle with enhanced cache management
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: Da25KUVSE5jbGds2zXmfXw==
+          # Use gradle wrapper properties as cache key component
+          cache-read-only: ${{ github.event_name != 'workflow_dispatch' }}
+      
+      - name: Validate cache health
+        run: |
+          echo "Validating Gradle cache integrity..."
+          ./gradlew --version
+          ./gradlew tasks --dry-run
+      
+      - name: Test build with cache
+        run: |
+          echo "Testing build with current cache state..."
+          ./gradlew clean --no-configuration-cache
+          ./gradlew assembleLawnWithQuickstepGithubDebug --no-build-cache --info | tee build.log
+      
+      - name: Check for cache issues
+        run: |
+          echo "Checking build log for cache-related issues..."
+          if grep -i "immutable.*workspace\|duplicate.*class\|cache.*corrupt" build.log; then
+            echo "Cache issues detected!"
+            exit 1
+          else
+            echo "Build completed successfully without cache issues"
+          fi
+      
+      - name: Upload cache diagnostic logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cache-diagnostic-logs-${{ github.run_number }}
+          path: |
+            build.log
+            ~/.gradle/daemon/*/daemon-*.out.log
+          retention-days: 7
