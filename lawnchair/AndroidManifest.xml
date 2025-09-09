@@ -57,7 +57,7 @@
             android:resource="@array/preloaded_fonts" />
 
         <activity
-            android:name="app.lawnchair.ui.preferences.PreferenceActivity"
+            android:name="com.diganta.nextgen.ui.preferences.PreferenceActivity"
             android:autoRemoveFromRecents="true"
             android:exported="true"
             android:label="@string/settings_button_text"
@@ -75,15 +75,15 @@
             tools:node="remove" />
 
         <activity
-            android:name="app.lawnchair.BlankActivity"
+            android:name="com.diganta.nextgen.BlankActivity"
             android:theme="@style/Theme.Transparent" />
 
         <activity
-            android:name="app.lawnchair.smartspace.SmartspacePreferencesShortcut"
+            android:name="com.diganta.nextgen.smartspace.SmartspacePreferencesShortcut"
             android:theme="@style/Theme.Transparent" />
 
         <receiver
-            android:name="app.lawnchair.gestures.handlers.SleepMethodDeviceAdmin$SleepDeviceAdmin"
+            android:name="com.diganta.nextgen.gestures.handlers.SleepMethodDeviceAdmin$SleepDeviceAdmin"
             android:description="@string/dt2s_admin_hint"
             android:exported="true"
             android:label="@string/derived_app_name"
@@ -97,7 +97,7 @@
         </receiver>
 
         <service
-            android:name="app.lawnchair.LawnchairAccessibilityService"
+            android:name="com.diganta.nextgen.NextGenAccessibilityService"
             android:exported="false"
             android:label="@string/derived_app_name"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -110,7 +110,7 @@
         </service>
 
         <provider
-            android:name="app.lawnchair.bugreport.FileProvider"
+            android:name="com.diganta.nextgen.bugreport.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -120,13 +120,13 @@
         </provider>
 
         <provider
-            android:name="app.lawnchair.search.LawnchairRecentSuggestionProvider"
-            android:authorities="${applicationId}.search.LawnchairRecentSuggestionProvider"
+            android:name="com.diganta.nextgen.search.NextGenRecentSuggestionProvider"
+            android:authorities="${applicationId}.search.NextGenRecentSuggestionProvider"
             android:syncable="true"
             android:exported="false" />
 
         <receiver
-            android:name="app.lawnchair.bugreport.BugReportReceiver"
+            android:name="com.diganta.nextgen.bugreport.BugReportReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="${applicationId}.bugreport.COPY" />
@@ -136,13 +136,13 @@
         </receiver>
 
         <service
-            android:name="app.lawnchair.bugreport.UploaderService"
+            android:name="com.diganta.nextgen.bugreport.UploaderService"
             android:enabled="true"
             android:exported="false"
             android:process=":bugReport" />
 
         <receiver
-            android:name="app.lawnchair.smartspace.SmartspaceAppWidgetProvider"
+            android:name="com.diganta.nextgen.smartspace.SmartspaceAppWidgetProvider"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

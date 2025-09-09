@@ -17,6 +17,7 @@
 ** limitations under the License.
 **
 ** Modifications copyright 2021, Lawnchair
+** Modifications copyright 2025, Next-gen
 */
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -29,7 +30,7 @@
     -->
 
     <application
-        android:name="app.lawnchair.LawnchairApp"
+        android:name="com.diganta.nextgen.NextGenApp"
         android:backupAgent="com.android.launcher3.LauncherBackupAgent"
         android:fullBackupOnly="true"
         android:fullBackupContent="@xml/backupscheme"
@@ -47,7 +48,7 @@
         attributes and intent filters the same
         -->
         <activity
-            android:name="app.lawnchair.LawnchairLauncher"
+            android:name="com.diganta.nextgen.NextGenLauncher"
             android:launchMode="singleTask"
             android:clearTaskOnLaunch="true"
             android:stateNotNeeded="true"
